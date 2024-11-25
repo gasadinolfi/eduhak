@@ -36,8 +36,18 @@ export async function POST(req: Request) {
     },
   });
 
-  return new Response(result, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+  // Convert the StreamObjectResult to a ReadableStream
+  const stream = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of result) {
+        controller.enqueue(JSON.stringify(chunk) + '\n');
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: { 'Content-Type': 'application/json; charset=utf-8' }
   });
 }
 

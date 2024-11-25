@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { experimental_useObject as useObject } from 'ai/react'
-import { quizQuestionsSchema } from './api/quiz/schema'
+import { quizQuestionsSchema } from './schema'
 
 const QuestionView = ({ question, onAnswer, answered }: { question: Question, onAnswer: (index: number) => void, answered: boolean }) => {
   return (

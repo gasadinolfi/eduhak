@@ -5,7 +5,7 @@ import { quizQuestionsSchema } from "./schema";
 export const runtime = 'edge';
 
 export async function POST(req: Request) {
-  const { questionNumber } = await req.json();
+  const { questionNumber, topic } = await req.json();
 
   const contexto = `
     CONCEPTOS BÁSICOS UAS, RPAS, drone o aeromodelo
@@ -34,8 +34,8 @@ export async function POST(req: Request) {
 
   const stream = await streamObject({
     model: groq("llama-3.1-70b-versatile"),
-    system: "Eres un generador de preguntas especializado en la creación de preguntas de opción múltiple de alta dificultad basadas en el contenido proporcionado. Genera preguntas que abarquen diferentes aspectos como definiciones, componentes, procedimientos, y regulaciones descritas en el texto. Cada pregunta debe ser única, tanto en su enfoque como en las opciones de respuesta. Asegúrate de que no haya repetición de preguntas ni de opciones entre ellas.",
-    prompt: `Genera ${questionNumber} preguntas sobre el siguiente contexto: ${contexto}`,
+    system: `Eres un generador de preguntas especializado en la creación de preguntas de opción múltiple de alta dificultad basadas en el contenido proporcionado sobre ${topic}. Genera preguntas que abarquen diferentes aspectos como definiciones, componentes, procedimientos, y regulaciones descritas en el texto. Cada pregunta debe ser única, tanto en su enfoque como en las opciones de respuesta. Asegúrate de que no haya repetición de preguntas ni de opciones entre ellas.`,
+    prompt: `Genera ${questionNumber} preguntas sobre el siguiente contexto relacionado con ${topic}: ${contexto}`,
     schema: quizQuestionsSchema,
   });
 

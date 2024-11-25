@@ -1,17 +1,15 @@
-import { DeepPartial } from "ai";
-import { z } from "zod";
+import { z } from 'zod';
 
-const questionSchema = z.object({
-  text: z.string().describe("Texto de la pregunta sobre drones"),
-  options: z.array(z.string()).describe("Opciones de respuesta"),
-  correctAnswer: z.number().describe("Índice de la respuesta correcta (0-3)"),
+export const questionSchema = z.object({
+  text: z.string().describe('The question text'),
+  options: z.array(z.string()).describe('An array of 4 answer options'),
+  correctAnswer: z.number().min(0).max(3).describe('The index of the correct answer (0-3)'),
 });
 
 export const quizQuestionsSchema = z.object({
-  questions: z.array(questionSchema).length(10),
+  questions: z.array(questionSchema).min(1).max(10),
 });
 
-// define a type for the partial notifications during generation
-export type PartialQuestions = DeepPartial<typeof quizQuestionsSchema>["questions"];
-
 export type Question = z.infer<typeof questionSchema>;
+export type QuizQuestions = z.infer<typeof quizQuestionsSchema>;
+

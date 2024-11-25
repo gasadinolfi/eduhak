@@ -2,6 +2,8 @@ import { groq } from '@ai-sdk/groq'
 import { generateObject } from 'ai'
 import { quizQuestionsSchema } from '@/lib/schema'
 
+const GROQ_API_KEY = process.env.GROQ_API_KEY
+
 export async function POST(req: Request) {
   const { questionNumber } = await req.json()
   
@@ -11,8 +13,12 @@ export async function POST(req: Request) {
   La respuesta correcta debe ser el índice (0-3) de la opción correcta.`
 
   try {
+    if (!GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY is not set')
+    }
+
     const { object } = await generateObject({
-      model: groq('mixtral-8x7b-32768'),
+      model: groq('llama-3.1-70b-versatile', GROQ_API_KEY),
       schema: quizQuestionsSchema,
       prompt,
       temperature: 0.7,
@@ -21,7 +27,11 @@ export async function POST(req: Request) {
     return Response.json(object)
   } catch (error) {
     console.error('Error generating questions:', error)
-    return Response.json({ error: 'Failed to generate questions' }, { status: 500 })
+    return Response.json({ 
+      error: 'Failed to generate questions',
+      details: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    }, { status: 500 })
   }
 }
 

@@ -11,6 +11,7 @@ export default function QuizPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [answered, setAnswered] = useState(false)
+  const [apiStatus, setApiStatus] = useState<string | null>(null)
 
   const { object: questionsData, submit: loadQuestions, isLoading, error } = useObject({
     api: '/api/chat',
@@ -18,26 +19,41 @@ export default function QuizPage() {
   })
 
   const handleAnswer = (index: number) => {
-    if (!answered && questionsData?.questions[currentQuestionIndex]) {
-      setAnswered(true)
-      if (index === questionsData.questions[currentQuestionIndex].correctAnswer) {
-        setScore(prev => prev + 1)
+    const currentQuestion = questionsData?.questions?.[currentQuestionIndex];
+    if (!answered && currentQuestion) {
+      setAnswered(true);
+      if (index === currentQuestion.correctAnswer) {
+        setScore((prev) => prev + 1);
       }
-      
+
       setTimeout(() => {
-        if (currentQuestionIndex < questionsData.questions.length - 1) {
-          setCurrentQuestionIndex(prev => prev + 1)
-          setAnswered(false)
+        if (currentQuestionIndex < (questionsData?.questions?.length ?? 0) - 1) {
+          setCurrentQuestionIndex((prev) => prev + 1);
+          setAnswered(false);
         }
-      }, 1500)
+      }, 1500);
     }
-  }
+  };
 
   const startQuiz = () => {
     setCurrentQuestionIndex(0)
     setScore(0)
     setAnswered(false)
     loadQuestions({ questionNumber: 3 })
+  }
+
+  const testApiKey = async () => {
+    try {
+      const response = await fetch('/api/test-groq')
+      const data = await response.json()
+      if (data.success) {
+        setApiStatus('API key is valid. Available models: ' + JSON.stringify(data.models))
+      } else {
+        setApiStatus(`API key is invalid. Error: ${data.details || data.error}\nStack: ${data.stack || 'No stack trace available'}`)
+      }
+    } catch (error) {
+      setApiStatus(`Error testing API key: ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 
   if (isLoading) {
@@ -53,6 +69,7 @@ export default function QuizPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-red-500 mb-4">Error al generar las preguntas</p>
+        <p className="text-sm text-gray-600 mb-4">{error instanceof Error ? error.message : String(error)}</p>
         <Button onClick={startQuiz}>Intentar de nuevo</Button>
       </div>
     )
@@ -62,19 +79,21 @@ export default function QuizPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Cuestionario de Drones</h1>
-        <Button onClick={startQuiz}>Comenzar</Button>
+        <Button onClick={startQuiz} className="mb-4">Comenzar</Button>
+        <Button onClick={testApiKey}>Probar API Key</Button>
+        {apiStatus && <p className="mt-2 max-w-md text-sm text-gray-600">{apiStatus}</p>}
       </div>
     )
   }
 
-  const currentQuestion = questionsData.questions[currentQuestionIndex]
+  const currentQuestion = questionsData?.questions?.[currentQuestionIndex]
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle>
-            Pregunta {currentQuestionIndex + 1} de {questionsData.questions.length}
+            Pregunta {currentQuestionIndex + 1} de {questionsData?.questions?.length ?? 0}
           </CardTitle>
           <div className="text-sm text-muted-foreground">
             Puntuación: {score}
@@ -82,21 +101,21 @@ export default function QuizPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-lg font-medium mb-4">{currentQuestion.text}</p>
+            <p className="text-lg font-medium mb-4">{currentQuestion?.text}</p>
             <div className="grid gap-3">
-              {currentQuestion.options.map((option, index) => (
+              {currentQuestion?.options.map((option, index) => (
                 <Button
-                  key={index}
+                  key={`option-${index}`}
                   onClick={() => handleAnswer(index)}
                   variant={
                     answered
-                      ? index === currentQuestion.correctAnswer
+                      ? index === currentQuestion?.correctAnswer
                         ? "default"
                         : "outline"
                       : "outline"
                   }
                   className={`justify-start h-auto py-4 px-6 text-left ${
-                    answered && index === currentQuestion.correctAnswer
+                    answered && index === currentQuestion?.correctAnswer
                       ? "bg-green-500 text-white hover:bg-green-600"
                       : ""
                   }`}

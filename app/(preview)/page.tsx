@@ -8,6 +8,8 @@ import { Menu, BookOpen, BarChart, User, Settings, Trophy, ArrowRight, X, FileTe
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { experimental_useObject as useObject } from 'ai/react'
+import { z } from 'zod'
 
 const QuestionView = ({ question, onAnswer, answered }: { question: Question, onAnswer: (index: number) => void, answered: boolean }) => {
   return (
@@ -172,8 +174,7 @@ const ResultModal = ({ isOpen, onClose, score, totalQuestions, onRetry }: { isOp
         <div className="mt-8 space-y-4">
           <Button
             onClick={onClose}
-            className="w-full bg-primary text
--primary-foreground hover:bg-primary/90"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
           >
             Continuar Aprendiendo
           </Button>
@@ -231,8 +232,6 @@ export default function Home() {
   const [showModules, setShowModules] = useState<boolean>(false)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false)
   const [showTutorial, setShowTutorial] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const storedStats = localStorage.getItem('userStats')
@@ -250,56 +249,28 @@ export default function Home() {
     }
   }, [])
 
-  const loadQuestions = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ questionNumber: 10 }),
-      });
-    
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Unknown error'}, details: ${errorData.details || 'No details provided'}`);
-      }
-    
-      const data = await response.json();
-      console.log('API response:', JSON.stringify(data, null, 2));
-    
-      if (data.questions && Array.isArray(data.questions) && data.questions.length === 10) {
-        setQuestions(data.questions);
-        setPreviousQuestions(prevQuestions => {
-          const updatedQuestions = [...prevQuestions, ...data.questions];
-          localStorage.setItem('previousQuestions', JSON.stringify(updatedQuestions));
-          return updatedQuestions;
-        });
-      } else {
-        throw new Error('Invalid or incomplete response format');
-      }
-    } catch (error) {
-      console.error('Error loading questions:', error);
-      setError(error instanceof Error ? error.message : 'Unknown error');
-      toast.error(`Error al cargar las preguntas: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { object: questionsData, submit: loadQuestions, isLoading, error } = useObject({
+    api: '/api/chat',
+    schema: z.object({
+      questions: z.array(z.object({
+        text: z.string(),
+        options: z.array(z.string()),
+        correctAnswer: z.number()
+      }))
+    })
+  })
 
   const handleAnswer = useCallback((index: number) => {
-    if (questions[currentQuestionNumber] && !answered) {
+    if (questionsData?.questions[currentQuestionNumber] && !answered) {
       setAnswered(true)
-      if (index === questions[currentQuestionNumber].correctAnswer) {
+      if (index === questionsData.questions[currentQuestionNumber].correctAnswer) {
         setScore(prevScore => prevScore + 1)
         toast.success("¡Respuesta correcta!")
       } else {
         toast.error("Respuesta incorrecta.")
       }
       setTimeout(() => {
-        if (currentQuestionNumber < questions.length - 1) {
+        if (currentQuestionNumber < questionsData.questions.length - 1) {
           setCurrentQuestionNumber(prevNumber => prevNumber + 1)
           setAnswered(false)
         } else {
@@ -307,7 +278,7 @@ export default function Home() {
           setUserStats(prev => {
             const newStats = {
               quizzesTaken: prev.quizzesTaken + 1,
-              averageScore: Math.round(((prev.averageScore * prev.quizzesTaken) + (score / questions.length * 100)) / (prev.quizzesTaken + 1))
+              averageScore: Math.round(((prev.averageScore * prev.quizzesTaken) + (score / questionsData.questions.length * 100)) / (prev.quizzesTaken + 1))
             }
             localStorage.setItem('userStats', JSON.stringify(newStats))
             return newStats
@@ -315,15 +286,14 @@ export default function Home() {
         }
       }, 2000)
     }
-  }, [questions, currentQuestionNumber, answered, score])
+  }, [questionsData, currentQuestionNumber, answered, score])
 
   const startNewQuiz = () => {
     setCurrentQuestionNumber(0)
     setScore(0)
     setAnswered(false)
-    setQuestions([])
     setShowResultModal(false)
-    loadQuestions()
+    loadQuestions({ questionNumber: 10 })
   }
 
   const retryQuiz = () => {
@@ -349,15 +319,15 @@ export default function Home() {
   }
 
   useEffect(() => {
-    console.log('Current questions state:', questions);
-  }, [questions]);
+    console.log('Current questions state:', questionsData);
+  }, [questionsData]);
 
   return (
     <div className={`flex min-h-screen bg-background ${isDarkMode ? 'dark' : ''}`}>
       <aside className={`w-64 bg-background shadow-lg overflow-y-auto fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out transform lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar 
           userStats={userStats} 
-          currentQuiz={{ totalQuestions: questions.length, currentQuestion: currentQuestionNumber + 1 }}
+          currentQuiz={{ totalQuestions: questionsData?.questions.length || 0, currentQuestion: currentQuestionNumber + 1 }}
           onSelectModule={handleSelectModule}
           onQuickStart={startNewQuiz}
         />
@@ -384,16 +354,16 @@ export default function Home() {
         <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-8 max-w-3xl mx-auto w-full">
           {showModules ? (
             <ModuleView onClose={() => setShowModules(false)} />
-          ) : questions.length > 0 ? (
+          ) : questionsData?.questions && questionsData.questions.length > 0 ? (
             <>
               <div className="mb-8 text-sm font-medium text-muted-foreground self-start w-full flex justify-between items-center">
-                <span>Pregunta {currentQuestionNumber + 1} de {questions.length}</span>
+                <span>Pregunta {currentQuestionNumber + 1} de {questionsData.questions.length}</span>
                 <span>Puntuación: {score}</span>
               </div>
               <AnimatePresence mode="wait">
                 <QuestionView
                   key={currentQuestionNumber}
-                  question={questions[currentQuestionNumber]}
+                  question={questionsData.questions[currentQuestionNumber]}
                   onAnswer={handleAnswer}
                   answered={answered}
                 />
@@ -407,7 +377,7 @@ export default function Home() {
           ) : error ? (
             <div className="text-center space-y-4">
               <h2 className="text-2xl font-bold text-red-500">Error</h2>
-              <p className="text-muted-foreground">{error}</p>
+              <p className="text-muted-foreground">{error instanceof Error ? error.message : 'Unknown error'}</p>
               <Button onClick={startNewQuiz} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 Intentar de nuevo
               </Button>
@@ -445,7 +415,7 @@ export default function Home() {
             isOpen={showResultModal}
             onClose={() => setShowResultModal(false)}
             score={score}
-            totalQuestions={questions.length}
+            totalQuestions={questionsData?.questions.length || 0}
             onRetry={retryQuiz}
           />
         )}

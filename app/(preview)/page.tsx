@@ -3,8 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { useObject } from "ai/react"
-import { Question, quizQuestionsSchema } from "@/app/api/chat/schema"
+import { Question } from "@/app/api/chat/schema"
 import { Menu, BookOpen, BarChart, User, Settings, Trophy, ArrowRight, X, FileText, Bell, HelpCircle, MessageSquare, Play, Sun, Moon, Loader2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -231,6 +230,7 @@ export default function Home() {
   const [showModules, setShowModules] = useState<boolean>(false)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false)
   const [showTutorial, setShowTutorial] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   useEffect(() => {
     const storedStats = localStorage.getItem('userStats')
@@ -248,23 +248,31 @@ export default function Home() {
     }
   }, [])
 
-  const { submit, isLoading, object } = useObject({
-    api: "/api/chat",
-    schema: quizQuestionsSchema,
-    onFinish(object) {
-      if (object?.questions) {
-        setQuestions(object.questions)
+  const loadQuestions = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ questionNumber: 10 }),
+      })
+      const data = await response.json()
+      if (data.questions) {
+        setQuestions(data.questions)
         setPreviousQuestions(prevQuestions => {
-          const updatedQuestions = [...prevQuestions, ...object.questions]
+          const updatedQuestions = [...prevQuestions, ...data.questions]
           localStorage.setItem('previousQuestions', JSON.stringify(updatedQuestions))
           return updatedQuestions
         })
       }
-    },
-    onError: () => {
+    } catch (error) {
       toast.error("Error al cargar las preguntas. Por favor, inténtalo de nuevo.")
-    },
-  })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleAnswer = useCallback((index: number) => {
     if (questions[currentQuestionNumber] && !answered) {
@@ -300,11 +308,10 @@ export default function Home() {
     setAnswered(false)
     setQuestions([])
     setShowResultModal(false)
-    submit({ questionNumber: 1 })
+    loadQuestions()
   }
 
-  const retryQuiz =
-() => {
+  const retryQuiz = () => {
     setCurrentQuestionNumber(0)
     setScore(0)
     setAnswered(false)
@@ -312,7 +319,8 @@ export default function Home() {
   }
 
   const handleSelectModule = (module: string) => {
-    if (module === 'módulos') {
+    if (module === 
+'módulos') {
       setShowModules(true)
     }
   }

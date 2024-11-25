@@ -3,12 +3,9 @@
 import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { experimental_useObject } from "ai/react"
+import { useObject } from "ai/react"
 import { Question, quizQuestionsSchema } from "@/app/api/chat/schema"
-import { 
-  Menu, BookOpen, BarChart, User, Settings, Trophy, ArrowRight, X, FileText, 
-  Bell, HelpCircle, MessageSquare, Play, Sun, Moon, Loader2
-} from 'lucide-react'
+import { Menu, BookOpen, BarChart, User, Settings, Trophy, ArrowRight, X, FileText, Bell, HelpCircle, MessageSquare, Play, Sun, Moon, Loader2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -251,10 +248,10 @@ export default function Home() {
     }
   }, [])
 
-  const { submit, isLoading, object } = experimental_useObject({
+  const { submit, isLoading, object } = useObject({
     api: "/api/chat",
     schema: quizQuestionsSchema,
-    onFinish({ object }) {
+    onFinish(object) {
       if (object?.questions) {
         setQuestions(object.questions)
         setPreviousQuestions(prevQuestions => {
@@ -306,7 +303,8 @@ export default function Home() {
     submit({ questionNumber: 1 })
   }
 
-  const retryQuiz = () => {
+  const retryQuiz =
+() => {
     setCurrentQuestionNumber(0)
     setScore(0)
     setAnswered(false)
@@ -456,3 +454,4 @@ export default function Home() {
     </div>
   )
 }
+

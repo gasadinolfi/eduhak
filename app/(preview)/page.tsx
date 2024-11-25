@@ -172,7 +172,8 @@ const ResultModal = ({ isOpen, onClose, score, totalQuestions, onRetry }: { isOp
         <div className="mt-8 space-y-4">
           <Button
             onClick={onClose}
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            className="w-full bg-primary text
+-primary-foreground hover:bg-primary/90"
           >
             Continuar Aprendiendo
           </Button>
@@ -260,15 +261,15 @@ export default function Home() {
         },
         body: JSON.stringify({ questionNumber: 10 }),
       });
-      
+    
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Unknown error'}`);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Unknown error'}, details: ${errorData.details || 'No details provided'}`);
       }
-      
+    
       const data = await response.json();
       console.log('API response:', data);
-      
+    
       if (data.questions && Array.isArray(data.questions) && data.questions.length === 10) {
         setQuestions(data.questions);
         setPreviousQuestions(prevQuestions => {
@@ -346,6 +347,10 @@ export default function Home() {
   const sendFeedback = () => {
     toast.success("Gracias por tu retroalimentación. La revisaremos pronto.")
   }
+
+  useEffect(() => {
+    console.log('Current questions state:', questions);
+  }, [questions]);
 
   return (
     <div className={`flex min-h-screen bg-background ${isDarkMode ? 'dark' : ''}`}>

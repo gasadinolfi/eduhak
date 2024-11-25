@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       • DINACIA (Dirección Nacional de Aviación Civil e Infraestructura Aeronáutica): DINACIA es el organismo estatal que vela por el cumplimiento de las normas de aviación civil en Uruguay. Promueve el desarrollo y aplicación de la legislación aeronáutica para aportar seguridad, calidad y sostenibilidad al sistema de aviación civil nacional. En caso de incumplimiento de las normas de aviación civil en territorio nacional, DINACIA es quien tiene la potestad sancionadora.
     `;
 
+    console.log('Generating questions...');
     const result = await streamObject({
       model: groq("llama-3.1-70b-versatile"),
       system:
@@ -49,13 +50,22 @@ export async function POST(req: Request) {
     });
 
     const questions = await result.object;
+    console.log('Questions generated:', questions);
+
+    if (!questions || !questions.questions || !Array.isArray(questions.questions) || questions.questions.length !== questionNumber) {
+      throw new Error('Invalid questions generated');
+    }
 
     return new Response(JSON.stringify({ questions: questions.questions }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error generating questions:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Internal Server Error', 
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

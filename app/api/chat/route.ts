@@ -47,12 +47,13 @@ export async function POST(req: Request) {
       prompt: `Genera ${questionNumber} preguntas sobre el siguiente contexto: ${contexto}`,
       schema: quizQuestionsSchema,
       onFinish({ object }) {
-        // Here you could save the generated questions to a database if needed
-        console.log('Questions generated successfully');
+        console.log('Questions generated successfully:', object);
       },
     });
 
-    return result.toTextStreamResponse();
+    return new Response(JSON.stringify(await result.object), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error generating questions:', error);
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
@@ -61,4 +62,3 @@ export async function POST(req: Request) {
     });
   }
 }
-

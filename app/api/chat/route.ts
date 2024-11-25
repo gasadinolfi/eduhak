@@ -1,8 +1,28 @@
 import { groq } from '@ai-sdk/groq';
 import { streamObject } from "ai";
-import { expenseSchema } from "./schema";
 
-export const maxDuration = 300; // Aumentamos el tiempo máximo de ejecución
+export const maxDuration = 300; // Increased maximum execution time
+
+// Define the schema for quiz questions
+const quizQuestionsSchema = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      question: { type: 'string' },
+      options: {
+        type: 'array',
+        items: { type: 'string' },
+        minItems: 4,
+        maxItems: 4
+      },
+      correctAnswer: { type: 'integer', minimum: 0, maximum: 3 }
+    },
+    required: ['question', 'options', 'correctAnswer']
+  },
+  minItems: 10,
+  maxItems: 10
+};
 
 export async function POST(req: Request) {
   const { questionNumber }: { questionNumber: number } = await req.json();
@@ -30,18 +50,20 @@ export async function POST(req: Request) {
     • Operador de UAS: Cualquier persona, física o jurídica, que sea propietaria de un UAS o lo alquile. Una persona puede ser operador y piloto si esa misma persona es quien vuela el UAS. Sin embargo, se puede ser piloto a distancia sin necesidad de ser operador, por ejemplo, si el piloto trabaja para una compañía que ofrece servicios con UAS. En aquellos casos en los que un piloto a distancia utiliza un UAS para volar en su tiempo libre, esa persona también es un operador de UAS.
     
     • DINACIA (Dirección Nacional de Aviación Civil e Infraestructura Aeronáutica): DINACIA es el organismo estatal que vela por el cumplimiento de las normas de aviación civil en Uruguay. Promueve el desarrollo y aplicación de la legislación aeronáutica para aportar seguridad, calidad y sostenibilidad al sistema de aviación civil nacional. En caso de incumplimiento de las normas de aviación civil en territorio nacional, DINACIA es quien tiene la potestad sancionadora.
-    ...
   `;
 
   const result = await streamObject({
-    model: groq ("llama-3.1-70b-versatile"),
+    model: groq("llama-3.1-70b-versatile"),
     system:
       "Eres un generador de preguntas especializado en la creación de preguntas de opción múltiple de alta dificultad basadas en el contenido proporcionado. Genera preguntas que abarquen diferentes aspectos como definiciones, componentes, procedimientos, y regulaciones descritas en el texto. Cada pregunta debe ser única, tanto en su enfoque como en las opciones de respuesta. Asegúrate de que no haya repetición de preguntas ni de opciones entre ellas.",
     prompt: `Genera 10 preguntas sobre el siguiente contexto: ${contexto}`,
     schema: quizQuestionsSchema,
     onFinish({ object }) {
-      // Aquí podrías guardar las preguntas generadas en una base de datos si es necesario
+      // Here you could save the generated questions to a database if needed
+      console.log("Questions generated successfully:", object);
     },
   });
 
-  return result.toTextStreamResponse(); 
+  return result.toTextStreamResponse();
+}
+

@@ -3,13 +3,13 @@
 import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { Question } from "@/app/api/chat/schema"
+import { Question } from "@/app/api/quiz/schema"
 import { Menu, BookOpen, BarChart, User, Settings, Trophy, ArrowRight, X, FileText, Bell, HelpCircle, MessageSquare, Play, Sun, Moon, Loader2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { experimental_useObject as useObject } from 'ai/react'
-import { z } from 'zod'
+import { quizQuestionsSchema } from './api/quiz/schema'
 
 const QuestionView = ({ question, onAnswer, answered }: { question: Question, onAnswer: (index: number) => void, answered: boolean }) => {
   return (
@@ -244,14 +244,8 @@ export default function Home() {
   }, [])
 
   const { object: questionsData, submit: loadQuestions, isLoading, error } = useObject({
-    api: '/api/chat',
-    schema: z.object({
-      questions: z.array(z.object({
-        text: z.string(),
-        options: z.array(z.string()),
-        correctAnswer: z.number()
-      }))
-    })
+    api: '/api/quiz',
+    schema: quizQuestionsSchema,
   })
 
   const handleAnswer = useCallback((index: number) => {
@@ -287,7 +281,7 @@ export default function Home() {
     setScore(0)
     setAnswered(false)
     setShowResultModal(false)
-    loadQuestions({ questionNumber: 10 })
+    loadQuestions({ questionNumber: 10, topic: 'Drones and UAV technology' })
   }
 
   const retryQuiz = () => {
@@ -312,16 +306,13 @@ export default function Home() {
     toast.success("Gracias por tu retroalimentación. La revisaremos pronto.")
   }
 
-  useEffect(() => {
-    console.log('Current questions state:', questionsData);
-  }, [questionsData]);
-
   return (
     <div className={`flex min-h-screen bg-background ${isDarkMode ? 'dark' : ''}`}>
       <aside className={`w-64 bg-background shadow-lg overflow-y-auto fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out transform lg:translate-x-0 ${
 showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar 
-          userStats={userStats} 
+          
+userStats={userStats} 
           currentQuiz={{ totalQuestions: questionsData?.questions.length || 0, currentQuestion: currentQuestionNumber + 1 }}
           onSelectModule={handleSelectModule}
           onQuickStart={startNewQuiz}

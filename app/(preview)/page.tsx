@@ -8,7 +8,7 @@ import { Menu, BookOpen, BarChart, User, Settings, Trophy, ArrowRight, X, FileTe
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useObject } from "ai/react"
+import { experimental_useObject as useObject } from 'ai/react';
 import { groq } from '@ai-sdk/groq'
 import { quizQuestionsSchema } from "@/lib/schema"
 import { HackathonIdeaGenerator } from "@/components/hackathon-idea-generator"

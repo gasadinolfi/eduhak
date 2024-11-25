@@ -179,8 +179,7 @@ const ResultModal = ({ isOpen, onClose, score, totalQuestions, onRetry }: { isOp
           <Button
             onClick={onRetry}
             variant="outline"
-            
-className="w-full"
+            className="w-full"
           >
             Intentar de Nuevo
           </Button>
@@ -250,7 +249,7 @@ export default function Home() {
   }, [])
 
   const loadQuestions = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -258,26 +257,32 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ questionNumber: 10 }),
-      })
-      const data = await response.json()
-      console.log('API response:', data)
-      if (data.questions && Array.isArray(data.questions)) {
-        setQuestions(data.questions)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('API response:', data);
+      
+      if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+        setQuestions(data.questions);
         setPreviousQuestions(prevQuestions => {
-          const updatedQuestions = [...prevQuestions, ...data.questions]
-          localStorage.setItem('previousQuestions', JSON.stringify(updatedQuestions))
-          return updatedQuestions
-        })
+          const updatedQuestions = [...prevQuestions, ...data.questions];
+          localStorage.setItem('previousQuestions', JSON.stringify(updatedQuestions));
+          return updatedQuestions;
+        });
       } else {
-        throw new Error('Invalid response format')
+        throw new Error('Invalid or empty response format');
       }
     } catch (error) {
-      console.error('Error loading questions:', error)
-      toast.error("Error al cargar las preguntas. Por favor, inténtalo de nuevo.")
+      console.error('Error loading questions:', error);
+      toast.error(`Error al cargar las preguntas: ${error.message}`);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleAnswer = useCallback((index: number) => {
     if (questions[currentQuestionNumber] && !answered) {

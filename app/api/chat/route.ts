@@ -2,11 +2,11 @@ import { groq } from '@ai-sdk/groq';
 import { streamObject } from "ai";
 import { quizQuestionsSchema } from "@/lib/schema";
 
-export const maxDuration = 300; // Increased maximum execution time
+export const maxDuration = 300; // Tiempo máximo de ejecución aumentado
 
-// Initialize the Groq provider
+// Inicializar el proveedor de Groq
 const groqProvider = groq({
-  apiKey: process.env.GROQ_API_KEY, // Make sure to set this environment variable
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 export async function POST(req: Request) {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const { questionNumber }: { questionNumber: number } = await req.json();
 
     if (typeof questionNumber !== 'number' || questionNumber <= 0) {
-      return new Response(JSON.stringify({ error: 'Invalid questionNumber' }), {
+      return new Response(JSON.stringify({ error: 'Número de preguntas inválido' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -52,8 +52,7 @@ export async function POST(req: Request) {
       prompt: `Genera ${questionNumber} preguntas sobre el siguiente contexto: ${contexto}`,
       schema: quizQuestionsSchema,
       onFinish({ object }) {
-        // Here you could save the generated questions to a database if needed
-        console.log('Questions generated successfully:', object);
+        console.log('Preguntas generadas exitosamente:', object);
       },
     });
 
@@ -61,10 +60,11 @@ export async function POST(req: Request) {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
   } catch (error) {
-    console.error('Error generating questions:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+    console.error('Error al generar preguntas:', error);
+    return new Response(JSON.stringify({ error: 'Error Interno del Servidor' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 }
+

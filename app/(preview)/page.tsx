@@ -268,7 +268,7 @@ export default function Home() {
       }
     
       const data = await response.json();
-      console.log('API response:', data);
+      console.log('API response:', JSON.stringify(data, null, 2));
     
       if (data.questions && Array.isArray(data.questions) && data.questions.length === 10) {
         setQuestions(data.questions);

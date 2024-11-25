@@ -224,11 +224,9 @@ export default function Home() {
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(0)
   const [score, setScore] = useState<number>(0)
   const [answered, setAnswered] = useState<boolean>(false)
-  const [questions, setQuestions] = useState<Question[]>([])
   const [showResultModal, setShowResultModal] = useState<boolean>(false)
   const [userStats, setUserStats] = useState({ quizzesTaken: 0, averageScore: 0 })
   const [showSidebar, setShowSidebar] = useState<boolean>(false)
-  const [previousQuestions, setPreviousQuestions] = useState<Question[]>([])
   const [showModules, setShowModules] = useState<boolean>(false)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false)
   const [showTutorial, setShowTutorial] = useState<boolean>(false)
@@ -237,10 +235,6 @@ export default function Home() {
     const storedStats = localStorage.getItem('userStats')
     if (storedStats) {
       setUserStats(JSON.parse(storedStats))
-    }
-    const storedQuestions = localStorage.getItem('previousQuestions')
-    if (storedQuestions) {
-      setPreviousQuestions(JSON.parse(storedQuestions))
     }
     const hasSeenTutorial = localStorage.getItem('hasSeenTutorial')
     if (!hasSeenTutorial) {
@@ -324,7 +318,8 @@ export default function Home() {
 
   return (
     <div className={`flex min-h-screen bg-background ${isDarkMode ? 'dark' : ''}`}>
-      <aside className={`w-64 bg-background shadow-lg overflow-y-auto fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out transform lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`w-64 bg-background shadow-lg overflow-y-auto fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out transform lg:translate-x-0 ${
+showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar 
           userStats={userStats} 
           currentQuiz={{ totalQuestions: questionsData?.questions.length || 0, currentQuestion: currentQuestionNumber + 1 }}

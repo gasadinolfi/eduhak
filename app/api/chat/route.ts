@@ -1,7 +1,7 @@
 import { groq } from '@ai-sdk/groq';
 import { streamObject } from "ai";
 
-export const maxDuration = 300; // Increased maximum execution time
+export const maxDuration = 305; // Increased maximum execution time
 
 // Define the schema for quiz questions
 const quizQuestionsSchema = {

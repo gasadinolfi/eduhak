@@ -15,4 +15,3 @@ export const quizQuestionsSchema = z.object({
 export type PartialQuestions = DeepPartial<typeof quizQuestionsSchema>["questions"];
 
 export type Question = z.infer<typeof questionSchema>;
-

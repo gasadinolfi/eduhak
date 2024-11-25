@@ -49,8 +49,8 @@ export async function POST(req: Request) {
     });
 
     const questions = await result.object;
-    
-    return new Response(JSON.stringify({ questions }), {
+
+    return new Response(JSON.stringify({ questions: questions.questions }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
@@ -61,3 +61,4 @@ export async function POST(req: Request) {
     });
   }
 }
+

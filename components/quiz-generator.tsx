@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { QuizQuestions, Question } from '@/lib/schema'
 
@@ -42,12 +41,13 @@ export function QuizGenerator() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center space-x-2">
-          <Input
+          <input
             type="number"
             value={questionNumber}
             onChange={(e) => setQuestionNumber(Number(e.target.value))}
             min={1}
             max={10}
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           />
           <Button onClick={handleGenerate} disabled={isLoading}>
             {isLoading ? 'Generando...' : 'Generar Preguntas'}

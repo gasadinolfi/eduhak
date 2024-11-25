@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     
     • Operador de UAS: Cualquier persona, física o jurídica, que sea propietaria de un UAS o lo alquile. Una persona puede ser operador y piloto si esa misma persona es quien vuela el UAS. Sin embargo, se puede ser piloto a distancia sin necesidad de ser operador, por ejemplo, si el piloto trabaja para una compañía que ofrece servicios con UAS. En aquellos casos en los que un piloto a distancia utiliza un UAS para volar en su tiempo libre, esa persona también es un operador de UAS.
     
-    • DINACIA (Dirección Nacional de Aviación Civil e Infraestructura Aeronáutica): DINACIA es el organismo estatal que vela por el cumplimiento de las normas de aviación civil en Uruguay. Promueve el desarrollo y aplicación de la legislación aeronáutica para aportar seguridad, calidad y sostenibilidad al sistema de aviación civil nacional. En caso de incumplimiento de las normas de aviación civil en territorio nacional, DINACIA es quien tiene la potestad sancionadora.
+    • DINACIA a(Dirección Nacional de Aviación Civil e Infraestructura Aeronáutica): DINACIA es el organismo estatal que vela por el cumplimiento de las normas de aviación civil en Uruguay. Promueve el desarrollo y aplicación de la legislación aeronáutica para aportar seguridad, calidad y sostenibilidad al sistema de aviación civil nacional. En caso de incumplimiento de las normas de aviación civil en territorio nacional, DINACIA es quien tiene la potestad sancionadora.
     ...
   `;
 

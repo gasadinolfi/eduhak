@@ -46,12 +46,11 @@ export async function POST(req: Request) {
         "Eres un generador de preguntas especializado en la creación de preguntas de opción múltiple de alta dificultad basadas en el contenido proporcionado. Genera preguntas que abarquen diferentes aspectos como definiciones, componentes, procedimientos, y regulaciones descritas en el texto. Cada pregunta debe ser única, tanto en su enfoque como en las opciones de respuesta. Asegúrate de que no haya repetición de preguntas ni de opciones entre ellas.",
       prompt: `Genera ${questionNumber} preguntas sobre el siguiente contexto: ${contexto}`,
       schema: quizQuestionsSchema,
-      onFinish({ object }) {
-        console.log('Questions generated successfully:', object);
-      },
     });
 
-    return new Response(JSON.stringify(await result.object), {
+    const questions = await result.object;
+    
+    return new Response(JSON.stringify({ questions }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
@@ -62,4 +61,3 @@ export async function POST(req: Request) {
     });
   }
 }
-

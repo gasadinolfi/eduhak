@@ -3,14 +3,14 @@
 import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { Question } from "../api/quiz/schema"
+import { Question } from "@/lib/schema"
 import { Menu, BookOpen, BarChart, User, Settings, Trophy, ArrowRight, X, FileText, Bell, HelpCircle, MessageSquare, Play, Sun, Moon, Loader2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { experimental_useObject as useObject } from 'ai/react'
 import { z } from 'zod'
-import { quizQuestionsSchema } from '../api/quiz/schema'
+import { quizQuestionsSchema } from '@/lib/schema'
 
 const QuestionView = ({ question, onAnswer, answered }: { question: Question, onAnswer: (index: number) => void, answered: boolean }) => {
   return (

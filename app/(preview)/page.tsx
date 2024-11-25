@@ -266,7 +266,7 @@ export default function Home() {
       const data = await response.json();
       console.log('API response:', data);
       
-      if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+      if (data.questions && Array.isArray(data.questions) && data.questions.length === 10) {
         setQuestions(data.questions);
         setPreviousQuestions(prevQuestions => {
           const updatedQuestions = [...prevQuestions, ...data.questions];
@@ -274,11 +274,11 @@ export default function Home() {
           return updatedQuestions;
         });
       } else {
-        throw new Error('Invalid or empty response format');
+        throw new Error('Invalid or incomplete response format');
       }
     } catch (error) {
       console.error('Error loading questions:', error);
-      toast.error(`Error al cargar las preguntas: ${error.message}`);
+      toast.error(`Error al cargar las preguntas: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }

@@ -50,13 +50,14 @@ export async function POST(req: Request) {
     });
 
     const questions = await result.object;
-    console.log('Questions generated:', questions);
+    console.log('Questions generated:', JSON.stringify(questions, null, 2));
 
     if (!questions || !questions.questions || !Array.isArray(questions.questions) || questions.questions.length !== questionNumber) {
+      console.error('Invalid questions generated:', questions);
       throw new Error('Invalid questions generated');
     }
 
-    return new Response(JSON.stringify({ questions: questions.questions }), {
+    return new Response(JSON.stringify(questions), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {

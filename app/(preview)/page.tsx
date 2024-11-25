@@ -179,7 +179,8 @@ const ResultModal = ({ isOpen, onClose, score, totalQuestions, onRetry }: { isOp
           <Button
             onClick={onRetry}
             variant="outline"
-            className="w-full"
+            
+className="w-full"
           >
             Intentar de Nuevo
           </Button>
@@ -259,8 +260,8 @@ export default function Home() {
         body: JSON.stringify({ questionNumber: 10 }),
       })
       const data = await response.json()
+      console.log('API response:', data)
       if (data.questions && Array.isArray(data.questions)) {
-        console.log('Preguntas recibidas:', data.questions)
         setQuestions(data.questions)
         setPreviousQuestions(prevQuestions => {
           const updatedQuestions = [...prevQuestions, ...data.questions]
@@ -323,8 +324,7 @@ export default function Home() {
   }
 
   const handleSelectModule = (module: string) => {
-    if (module === 
-'módulos') {
+    if (module === 'módulos') {
       setShowModules(true)
     }
   }

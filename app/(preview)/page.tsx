@@ -3,13 +3,19 @@
 import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { Question } from "@/app/api/quiz/schema"
+import { Question } from "@/lib/schema"
 import { Menu, BookOpen, BarChart, User, Settings, Trophy, ArrowRight, X, FileText, Bell, HelpCircle, MessageSquare, Play, Sun, Moon, Loader2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { experimental_useObject as useObject } from 'ai/react'
-import { quizQuestionsSchema } from 'api/chat/schema'
+import { useObject } from "ai/react"
+import { groq } from '@ai-sdk/groq'
+import { quizQuestionsSchema } from "@/lib/schema"
+import { HackathonIdeaGenerator } from "@/components/hackathon-idea-generator"
+
+const groqProvider = groq({
+  apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
+})
 
 const QuestionView = ({ question, onAnswer, answered }: { question: Question, onAnswer: (index: number) => void, answered: boolean }) => {
   return (
@@ -60,181 +66,107 @@ const QuestionView = ({ question, onAnswer, answered }: { question: Question, on
   )
 }
 
-const Sidebar = ({ userStats, currentQuiz, onSelectModule, onQuickStart }: { 
-  userStats: { quizzesTaken: number, averageScore: number }, 
-  currentQuiz: { totalQuestions: number, currentQuestion: number },
-  onSelectModule: (module: string) => void,
-  onQuickStart: () => void
-}) => {
+const Sidebar = ({ userStats, currentQuiz, onSelectModule, onQuickStart }: { userStats: any, currentQuiz: any, onSelectModule: (module: string) => void, onQuickStart: () => void }) => {
   return (
-    <div className="w-full h-full bg-background flex flex-col shadow-lg overflow-y-auto">
-      <div className="flex flex-col items-start p-6 space-y-4 bg-gradient-to-b from-primary/10 to-background">
-        <Avatar className="w-12 h-12 ring-2 ring-primary ring-offset-2 ring-offset-background">
+    <div className="p-6">
+      <div className="flex items-center space-x-4 mb-6">
+        <Avatar className="w-12 h-12">
           <AvatarImage src="/placeholder.svg?height=48&width=48" alt="Avatar del usuario" />
           <AvatarFallback>UN</AvatarFallback>
         </Avatar>
         <div>
-          <h2 className="text-lg font-medium">Nombre de Usuario</h2>
-          <p className="text-sm text-muted-foreground">usuario@ejemplo.com</p>
+          <p className="font-medium">Usuario</p>
+          <p className="text-sm text-muted-foreground">Estadísticas</p>
         </div>
       </div>
-      <Button 
-        variant="outline" 
-        className="mx-4 mb-4 flex items-center justify-center bg-primary/10 hover:bg-primary/20 transition-colors"
-        onClick={onQuickStart}
-      >
-        <Play className="w-4 h-4 mr-2" />
-        Inicio Rápido
-      </Button>
-      <nav className="flex-1 px-4 pb-4">
-        <ul className="space-y-2">
-          {[
-            { icon: BookOpen, label: 'Cursos' },
-            { icon: BarChart, label: 'Progreso' },
-            { icon: User, label: 'Perfil' },
-            { icon: Settings, label: 'Ajustes' },
-            { icon: FileText, label: 'Módulos' },
-            { icon: Bell, label: 'Notificaciones' },
-          ].map(({ icon: Icon, label }) => (
-            <li key={label}>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start hover:bg-secondary transition-colors"
-                onClick={() => label === 'Módulos' && onSelectModule('módulos')}
-              >
-                <Icon className="w-4 h-4 mr-3" />
-                {label}
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="p-6 space-y-4 bg-secondary/50 backdrop-blur-sm">
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <div>Cuestionarios realizados:</div>
-          <div>{userStats.quizzesTaken}</div>
+      <div className="space-y-4">
+        <div>
+          <p className="font-medium">Cuestionarios Realizados: {userStats.quizzesTaken}</p>
+          <p className="font-medium">Puntuación Promedio: {userStats.averageScore}%</p>
         </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <div>Puntuación promedio:</div>
-          <div>{userStats.averageScore}%</div>
+        <div>
+          <p className="font-medium">Cuestionario Actual</p>
+          <p className="text-sm text-muted-foreground">Preguntas: {currentQuiz.totalQuestions}</p>
+          <p className="text-sm text-muted-foreground">Pregunta Actual: {currentQuiz.currentQuestion}</p>
         </div>
-        {currentQuiz.totalQuestions > 0 && (
-          <div className="pt-4 border-t border-border">
-            <div className="text-sm font-medium mb-2">Progreso del cuestionario actual</div>
-            <div className="text-xs text-muted-foreground mt-2">
-              Pregunta {currentQuiz.currentQuestion} de {currentQuiz.totalQuestions}
-            </div>
-          </div>
-        )}
+      </div>
+      <div className="mt-8">
+        <Button onClick={onQuickStart} className="w-full">Comenzar Cuestionario</Button>
       </div>
     </div>
   )
 }
 
-const ResultModal = ({ isOpen, onClose, score, totalQuestions, onRetry }: { isOpen: boolean, onClose: () => void, score: number, totalQuestions: number, onRetry: () => void }) => {
-  if (!isOpen) return null;
-
-  const percentage = Math.round((score / totalQuestions) * 100);
-
+const ModuleView = ({ onClose }: { onClose: () => void }) => {
   return (
-    <motion.div 
+    <div className="p-6">
+      <Button onClick={onClose} className="absolute top-4 right-4">Cerrar</Button>
+      <h2 className="text-2xl font-bold mb-4">Módulos</h2>
+      <ul className="list-disc list-inside space-y-2">
+        <li>Módulo 1: Introducción a los Drones</li>
+        <li>Módulo 2: Tipos de Drones</li>
+        <li>Módulo 3: Regulaciones de Drones</li>
+      </ul>
+    </div>
+  )
+}
+
+const ResultModal = ({ isOpen, onClose, score, totalQuestions, onRetry }: { isOpen: boolean, onClose: () => void, score: number, totalQuestions: number, onRetry: () => void }) => {
+  return (
+    <motion.div
       className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <motion.div 
-        className="bg-background rounded-lg p-8 max-w-md w-full shadow-2xl"
+      <motion.div
+        className="bg-background rounded-lg shadow-lg p-6 w-full max-w-md"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", damping: 15, stiffness: 100 }}
       >
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", damping: 10, stiffness: 100, delay: 0.2 }}
-          >
-            <Trophy className="w-16 h-16 mx-auto mb-4 text-yellow-500" />
-          </motion.div>
-          <h2 className="text-3xl font-bold mb-2">¡Cuestionario Completado!</h2>
-          <p className="text-muted-foreground mb-6">¡Buen trabajo! Aquí están tus resultados:</p>
-        </div>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-lg">Puntuación:</span>
-            <span className="text-2xl font-bold">{score} / {totalQuestions}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-lg">Porcentaje:</span>
-            <span className="text-2xl font-bold">{percentage}%</span>
-          </div>
-        </div>
-        <div className="mt-8 space-y-4">
-          <Button
-            onClick={onClose}
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            Continuar Aprendiendo
-          </Button>
-          <Button
-            onClick={onRetry}
-            variant="outline"
-            className="w-full"
-          >
-            Intentar de Nuevo
-          </Button>
+        <h2 className="text-2xl font-bold mb-4">Resultados</h2>
+        <p className="text-lg mb-4">Tu puntuación: {score} de {totalQuestions}</p>
+        <p className="text-lg mb-4">Porcentaje: {Math.round((score / totalQuestions) * 100)}%</p>
+        <div className="flex justify-end">
+          <Button onClick={onClose} variant="outline" className="mr-2">Cerrar</Button>
+          <Button onClick={onRetry}>Reintentar</Button>
         </div>
       </motion.div>
     </motion.div>
   )
 }
 
-const ModuleView = ({ onClose }: { onClose: () => void }) => {
-  return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Módulos de Aprendizaje</CardTitle>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-6 w-6" />
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-4">
-          {['Introducción a los Drones', 'Legislación y Regulaciones', 'Pilotaje Básico'].map((module, index) => (
-            <motion.li 
-              key={module}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <h3 className="text-lg font-medium">Módulo {index + 1}: {module}</h3>
-              <p className="text-sm text-muted-foreground">Descripción breve del módulo.</p>
-              <Button variant="link" className="p-0 h-auto">Ver PDF</Button>
-            </motion.li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  )
-}
 
 export default function Home() {
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(0)
   const [score, setScore] = useState<number>(0)
   const [answered, setAnswered] = useState<boolean>(false)
+  const [questions, setQuestions] = useState<Question[]>([])
   const [showResultModal, setShowResultModal] = useState<boolean>(false)
   const [userStats, setUserStats] = useState({ quizzesTaken: 0, averageScore: 0 })
   const [showSidebar, setShowSidebar] = useState<boolean>(false)
+  const [previousQuestions, setPreviousQuestions] = useState<Question[]>([])
   const [showModules, setShowModules] = useState<boolean>(false)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false)
   const [showTutorial, setShowTutorial] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+
+  const { complete } = useObject({
+    model: groqProvider("llama-3.1-70b-versatile"),
+    schema: quizQuestionsSchema,
+    initialInput: "",
+  })
 
   useEffect(() => {
     const storedStats = localStorage.getItem('userStats')
     if (storedStats) {
       setUserStats(JSON.parse(storedStats))
+    }
+    const storedQuestions = localStorage.getItem('previousQuestions')
+    if (storedQuestions) {
+      setPreviousQuestions(JSON.parse(storedQuestions))
     }
     const hasSeenTutorial = localStorage.getItem('hasSeenTutorial')
     if (!hasSeenTutorial) {
@@ -243,22 +175,40 @@ export default function Home() {
     }
   }, [])
 
-  const { object: questionsData, submit: loadQuestions, isLoading, error } = useObject({
-    api: '/api/quiz',
-    schema: quizQuestionsSchema,
-  })
+  const loadQuestions = async () => {
+    setIsLoading(true)
+    try {
+      const result = await complete(`Generate 10 questions about drones and their regulations`)
+      if (result.questions && Array.isArray(result.questions)) {
+        console.log('Preguntas recibidas:', result.questions)
+        setQuestions(result.questions)
+        setPreviousQuestions(prevQuestions => {
+          const updatedQuestions = [...prevQuestions, ...result.questions]
+          localStorage.setItem('previousQuestions', JSON.stringify(updatedQuestions))
+          return updatedQuestions
+        })
+      } else {
+        throw new Error('Invalid response format')
+      }
+    } catch (error) {
+      console.error('Error loading questions:', error)
+      toast.error("Error al cargar las preguntas. Por favor, inténtalo de nuevo.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleAnswer = useCallback((index: number) => {
-    if (questionsData?.questions[currentQuestionNumber] && !answered) {
+    if (questions[currentQuestionNumber] && !answered) {
       setAnswered(true)
-      if (index === questionsData.questions[currentQuestionNumber].correctAnswer) {
+      if (index === questions[currentQuestionNumber].correctAnswer) {
         setScore(prevScore => prevScore + 1)
         toast.success("¡Respuesta correcta!")
       } else {
         toast.error("Respuesta incorrecta.")
       }
       setTimeout(() => {
-        if (currentQuestionNumber < questionsData.questions.length - 1) {
+        if (currentQuestionNumber < questions.length - 1) {
           setCurrentQuestionNumber(prevNumber => prevNumber + 1)
           setAnswered(false)
         } else {
@@ -266,7 +216,7 @@ export default function Home() {
           setUserStats(prev => {
             const newStats = {
               quizzesTaken: prev.quizzesTaken + 1,
-              averageScore: Math.round(((prev.averageScore * prev.quizzesTaken) + (score / questionsData.questions.length * 100)) / (prev.quizzesTaken + 1))
+              averageScore: Math.round(((prev.averageScore * prev.quizzesTaken) + (score / questions.length * 100)) / (prev.quizzesTaken + 1))
             }
             localStorage.setItem('userStats', JSON.stringify(newStats))
             return newStats
@@ -274,14 +224,15 @@ export default function Home() {
         }
       }, 2000)
     }
-  }, [questionsData, currentQuestionNumber, answered, score])
+  }, [questions, currentQuestionNumber, answered, score])
 
   const startNewQuiz = () => {
     setCurrentQuestionNumber(0)
     setScore(0)
     setAnswered(false)
+    setQuestions([])
     setShowResultModal(false)
-    loadQuestions({ questionNumber: 10, topic: 'Drones and UAV technology' })
+    loadQuestions()
   }
 
   const retryQuiz = () => {
@@ -308,12 +259,10 @@ export default function Home() {
 
   return (
     <div className={`flex min-h-screen bg-background ${isDarkMode ? 'dark' : ''}`}>
-      <aside className={`w-64 bg-background shadow-lg overflow-y-auto fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out transform lg:translate-x-0 ${
-showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`w-64 bg-background shadow-lg overflow-y-auto fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out transform lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar 
-          
-userStats={userStats} 
-          currentQuiz={{ totalQuestions: questionsData?.questions.length || 0, currentQuestion: currentQuestionNumber + 1 }}
+          userStats={userStats} 
+          currentQuiz={{ totalQuestions: questions.length, currentQuestion: currentQuestionNumber + 1 }}
           onSelectModule={handleSelectModule}
           onQuickStart={startNewQuiz}
         />
@@ -340,16 +289,16 @@ userStats={userStats}
         <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-8 max-w-3xl mx-auto w-full">
           {showModules ? (
             <ModuleView onClose={() => setShowModules(false)} />
-          ) : questionsData?.questions && questionsData.questions.length > 0 ? (
+          ) : questions.length > 0 ? (
             <>
               <div className="mb-8 text-sm font-medium text-muted-foreground self-start w-full flex justify-between items-center">
-                <span>Pregunta {currentQuestionNumber + 1} de {questionsData.questions.length}</span>
+                <span>Pregunta {currentQuestionNumber + 1} de {questions.length}</span>
                 <span>Puntuación: {score}</span>
               </div>
               <AnimatePresence mode="wait">
                 <QuestionView
                   key={currentQuestionNumber}
-                  question={questionsData.questions[currentQuestionNumber]}
+                  question={questions[currentQuestionNumber]}
                   onAnswer={handleAnswer}
                   answered={answered}
                 />
@@ -359,14 +308,6 @@ userStats={userStats}
             <div className="text-lg text-muted-foreground flex items-center">
               <Loader2 className="mr-2 h-6 w-6 animate-spin" />
               Cargando cuestionario...
-            </div>
-          ) : error ? (
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold text-red-500">Error</h2>
-              <p className="text-muted-foreground">{error instanceof Error ? error.message : 'Unknown error'}</p>
-              <Button onClick={startNewQuiz} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Intentar de nuevo
-              </Button>
             </div>
           ) : (
             <motion.div 
@@ -401,7 +342,7 @@ userStats={userStats}
             isOpen={showResultModal}
             onClose={() => setShowResultModal(false)}
             score={score}
-            totalQuestions={questionsData?.questions.length || 0}
+            totalQuestions={questions.length}
             onRetry={retryQuiz}
           />
         )}
@@ -444,4 +385,3 @@ userStats={userStats}
     </div>
   )
 }
-

@@ -231,6 +231,7 @@ export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false)
   const [showTutorial, setShowTutorial] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const storedStats = localStorage.getItem('userStats')
@@ -250,6 +251,7 @@ export default function Home() {
 
   const loadQuestions = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -260,7 +262,8 @@ export default function Home() {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Unknown error'}`);
       }
       
       const data = await response.json();
@@ -278,6 +281,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error loading questions:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error');
       toast.error(`Error al cargar las preguntas: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
@@ -394,6 +398,14 @@ export default function Home() {
             <div className="text-lg text-muted-foreground flex items-center">
               <Loader2 className="mr-2 h-6 w-6 animate-spin" />
               Cargando cuestionario...
+            </div>
+          ) : error ? (
+            <div className="text-center space-y-4">
+              <h2 className="text-2xl font-bold text-red-500">Error</h2>
+              <p className="text-muted-foreground">{error}</p>
+              <Button onClick={startNewQuiz} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Intentar de nuevo
+              </Button>
             </div>
           ) : (
             <motion.div 

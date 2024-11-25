@@ -259,15 +259,19 @@ export default function Home() {
         body: JSON.stringify({ questionNumber: 10 }),
       })
       const data = await response.json()
-      if (data.questions) {
+      if (data.questions && Array.isArray(data.questions)) {
+        console.log('Preguntas recibidas:', data.questions)
         setQuestions(data.questions)
         setPreviousQuestions(prevQuestions => {
           const updatedQuestions = [...prevQuestions, ...data.questions]
           localStorage.setItem('previousQuestions', JSON.stringify(updatedQuestions))
           return updatedQuestions
         })
+      } else {
+        throw new Error('Invalid response format')
       }
     } catch (error) {
+      console.error('Error loading questions:', error)
       toast.error("Error al cargar las preguntas. Por favor, inténtalo de nuevo.")
     } finally {
       setIsLoading(false)

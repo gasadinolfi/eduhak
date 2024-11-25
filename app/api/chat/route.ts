@@ -2,34 +2,46 @@ import { groq } from '@ai-sdk/groq';
 import { streamObject } from "ai";
 import { expenseSchema } from "./schema";
 
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 300;
+export const maxDuration = 300; // Aumentamos el tiempo máximo de ejecución
 
 export async function POST(req: Request) {
-  const { expense }: { expense: string } = await req.json();
+  const { questionNumber }: { questionNumber: number } = await req.json();
+
+  const contexto = `
+    CONCEPTOS BÁSICOS UAS, RPAS, drone o aeromodelo
+    Se usan diferentes términos para referirnos a las aeronaves no tripuladas, pero ¿qué diferencias hay entre ellos?
+    
+    • Aeronave no tripulada o RPA (Remotely Piloted Aircraft): Cualquier aeronave que opere o esté diseñada para operar de forma autónoma o para ser pilotada a distancia sin un piloto a bordo. Este RPA, también llamado DAOD por DINACIA (Dispositivo Aéreo Operado a Distancia).
+    
+    • Dron (drone en inglés): Palabra coloquialmente usada para referirse en general a todas las aeronaves no tripuladas, debido a su similitud con un zumbido de abejorro. Es otra forma de nombrar a los RPA.
+    
+    • Aeromodelo: Aeronave de tamaño reducido pilotada a distancia, utilizada principalmente para vuelos deportivos o experimentales. También puede ser un RPA.
+    
+    • RPAS («Sistema de Aeronave Pilotada por Control Remoto»): Aeronave pilotada a distancia, su sistema de vuelo, su estación, los enlaces requeridos de mando y control, y cualquier otro componente según lo indicado en el diseño de la aeronave.
+    
+    • UAV («Aeronave No Tripulada»): Aeronave no tripulada que tiene la capacidad de volar de manera autónoma y el equipo para controlarla de forma remota.
+    
+    • UAS («Unmanned Aircraft System»): El término UAS engloba los RPAS y las aeronaves autónomas. Es un término más genérico que se refiere a cualquier sistema de aeronaves no tripuladas, incluidos RPAS y UAV (el piloto a distancia no puede intervenir durante el vuelo).
+    
+    • VFR (Visual Flight Rules), IFR (Instrument Flight Rules), VMC (Visual Meteorological Conditions), IMC (Instrument Meteorological Conditions).
+    
+    • Piloto a distancia: Persona física responsable de la conducción segura del vuelo de un UAS mediante la utilización de sus mandos de vuelo, ya sea manualmente o, cuando la aeronave vuele de forma automática, mediante la supervisión de su vuelo (rumbo, velocidad, altura, entorno...), siendo capaz de intervenir y cambiar los parámetros de vuelo (rumbo, velocidad y/o altura) en cualquier momento.
+    
+    • Operador de UAS: Cualquier persona, física o jurídica, que sea propietaria de un UAS o lo alquile. Una persona puede ser operador y piloto si esa misma persona es quien vuela el UAS. Sin embargo, se puede ser piloto a distancia sin necesidad de ser operador, por ejemplo, si el piloto trabaja para una compañía que ofrece servicios con UAS. En aquellos casos en los que un piloto a distancia utiliza un UAS para volar en su tiempo libre, esa persona también es un operador de UAS.
+    
+    • DINACIA (Dirección Nacional de Aviación Civil e Infraestructura Aeronáutica): DINACIA es el organismo estatal que vela por el cumplimiento de las normas de aviación civil en Uruguay. Promueve el desarrollo y aplicación de la legislación aeronáutica para aportar seguridad, calidad y sostenibilidad al sistema de aviación civil nacional. En caso de incumplimiento de las normas de aviación civil en territorio nacional, DINACIA es quien tiene la potestad sancionadora.
+    ...
+  `;
 
   const result = await streamObject({
-    model: groq('llama-3.1-8b-instant'),
+    model: groq ("llama-3.1-70b-versatile"),
     system:
-      "You categorize expenses into one of the following categories: " +
-      "TRAVEL, MEALS, ENTERTAINMENT, OFFICE SUPPLIES, OTHER." +
-      // provide date (including day of week) for reference:
-      "The current date is: " +
-      new Date()
-        .toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
-          weekday: "short",
-        })
-        .replace(/(\w+), (\w+) (\d+), (\d+)/, "$4-$2-$3 ($1)") +
-      ". When no date is supplied, use the current date.",
-    prompt: `Please categorize the following expense: "${expense}"`,
-    schema: expenseSchema,
+      "Eres un generador de preguntas especializado en la creación de preguntas de opción múltiple de alta dificultad basadas en el contenido proporcionado. Genera preguntas que abarquen diferentes aspectos como definiciones, componentes, procedimientos, y regulaciones descritas en el texto. Cada pregunta debe ser única, tanto en su enfoque como en las opciones de respuesta. Asegúrate de que no haya repetición de preguntas ni de opciones entre ellas.",
+    prompt: `Genera 10 preguntas sobre el siguiente contexto: ${contexto}`,
+    schema: quizQuestionsSchema,
     onFinish({ object }) {
-      // save object to database
+      // Aquí podrías guardar las preguntas generadas en una base de datos si es necesario
     },
   });
 
-  return result.toTextStreamResponse();
-}
+  return result.toTextStreamResponse(); 

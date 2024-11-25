@@ -1,23 +1,17 @@
 import { DeepPartial } from "ai";
 import { z } from "zod";
 
-export const expenseSchema = z.object({
-  expense: z.object({
-    category: z
-      .string()
-      .describe(
-        "Category of the expense. Allowed categories: TRAVEL, MEALS, ENTERTAINMENT, OFFICE SUPPLIES, OTHER."
-      ),
-    amount: z.number().describe("Amount of the expense in USD."),
-    date: z.string().describe("Date of the expense, in dd-MMM format."),
-    details: z.string().describe("Name of the product or service."),
-    participants: z
-      .array(z.string())
-      .describe("Participants in the expense, as usernames."),
-  }),
+const questionSchema = z.object({
+  text: z.string().describe("Texto de la pregunta sobre drones"),
+  options: z.array(z.string()).describe("Opciones de respuesta"),
+  correctAnswer: z.number().describe("Índice de la respuesta correcta (0-3)"),
+});
+
+export const quizQuestionsSchema = z.object({
+  questions: z.array(questionSchema).length(10),
 });
 
 // define a type for the partial notifications during generation
-export type PartialExpense = DeepPartial<typeof expenseSchema>["expense"];
+export type PartialQuestions = DeepPartial<typeof quizQuestionsSchema>["questions"];
 
-export type Expense = z.infer<typeof expenseSchema>["expense"];
+export type Question = z.infer<typeof questionSchema>;
